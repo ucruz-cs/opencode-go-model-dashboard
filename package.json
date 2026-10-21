@@ -1,0 +1,27 @@
+{
+  "name": "opencode-go-model-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unofficial dashboard for OpenCode Go: Artificial Analysis benchmarks, blended pricing, tokens/month and data retention for every model.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ucruz-cs/opencode-go-model-dashboard.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-go",
+    "artificial-analysis",
+    "benchmarks",
+    "dashboard",
+    "llm"
+  ],
+  "license": "MIT"
+}

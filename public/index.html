@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenCode Go · Model Benchmarks</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="titles">
+        <h1>OpenCode Go · Model Dashboard</h1>
+        <p class="subtitle">
+          Benchmarks, pricing and data retention for every model in your OpenCode Go
+          subscription.
+        </p>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <span class="filter-title">Subscription</span>
+          <div id="plan-filter" class="segmented" role="group" aria-label="Subscription plan">
+            <button type="button" class="segmented-btn active" data-plan="go">Go</button>
+            <button type="button" class="segmented-btn" data-plan="plus">Go Plus</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-title">
+            Model privacy
+            <span class="info" tabindex="0" role="button" aria-label="How the model privacy filter works">
+              i
+              <span class="info-pop" role="tooltip">
+                <span class="info-head">Applies to the whole page</span>
+                <span class="info-row"><strong>ALL MODELS</strong><span>Shows all models</span></span>
+                <span class="info-row"><strong>NO TRAINING</strong><span>Hides contributors</span></span>
+                <span class="info-row"><strong>ZDR</strong><span>Only 0-day retention</span></span>
+              </span>
+            </span>
+          </span>
+          <div id="privacy-filter" class="segmented" role="group" aria-label="Data retention filter">
+            <button type="button" class="segmented-btn active" data-filter="all">All models</button>
+            <button type="button" class="segmented-btn" data-filter="notraining">No training</button>
+            <button type="button" class="segmented-btn" data-filter="zdr">ZDR</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-title">
+            Price tiers
+            <span class="info" tabindex="0" role="button" aria-label="How the price tier filter works">
+              i
+              <span class="info-pop" role="tooltip">
+                <span class="info-head">Applies to the whole page</span>
+                <span class="info-row"><strong>LOWEST</strong><span>Only the cheapest tier of each model</span></span>
+                <span class="info-row"><strong>ALL TIERS</strong><span>Every tier as its own row; dashed lines link tiers in the chart</span></span>
+                <span class="info-row"><strong>HIGHEST</strong><span>Only the most expensive tier of each model</span></span>
+              </span>
+            </span>
+          </span>
+          <div id="tier-filter" class="segmented" role="group" aria-label="Price tier filter">
+            <button type="button" class="segmented-btn active" data-tier="cheap">Lowest</button>
+            <button type="button" class="segmented-btn" data-tier="both">All tiers</button>
+            <button type="button" class="segmented-btn" data-tier="expensive">Highest</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="updated-block">
+          <span class="updated-label" title="When the pricing and benchmark data were last fetched">Last updated</span>
+          <span id="updated" class="muted">Loading…</span>
+        </div>
+        <button id="refresh" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="banner" class="banner" hidden></div>
+
+      <section class="cards">
+        <div class="card card-count">
+          <span class="card-label" id="models-label">Models in Go</span>
+          <div class="count-row">
+            <span id="stat-total" class="count-big">–</span>
+            <span class="count-detail">
+              <strong id="stat-matched">–</strong>
+              <span>with benchmark data</span>
+            </span>
+          </div>
+          <div class="meter" role="presentation">
+            <span id="stat-meter" class="meter-fill"></span>
+          </div>
+        </div>
+
+        <div class="card card-best">
+          <span class="card-label">Best models</span>
+          <ul class="best-list">
+            <li>
+              <span class="best-key">Smartest <small>intelligence</small></span>
+              <span id="stat-smartest" class="best-val">–</span>
+            </li>
+            <li title="Normalised all-rounder score: (intelligence ÷ best intelligence) × (tokens/mo ÷ best tokens/mo). Both factors count — higher is better.">
+              <span class="best-key">All-rounder <small>intel × tokens</small></span>
+              <span id="stat-intel-token" class="best-val">–</span>
+            </li>
+            <li>
+              <span class="best-key">Most tokens <small>per month</small></span>
+              <span id="stat-value" class="best-val">–</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-heading">
+            <h2>Model comparison</h2>
+            <p class="panel-sub">Benchmarks, pricing and data retention for every Go model.</p>
+          </div>
+          <span id="variant-note" class="variant-note muted" hidden></span>
+        </div>
+        <div id="creator-legend" class="legend" aria-label="Colour key by model creator"></div>
+        <div class="table-wrap">
+          <table id="table">
+            <thead>
+              <tr>
+                <th class="sortable" data-key="name">Model</th>
+                <th class="sortable" data-key="creator">Creator</th>
+                <th class="sortable num" data-key="intelligence">Intelligence</th>
+                <th class="sortable num" data-key="coding">Coding</th>
+                <th class="sortable num" data-key="agentic">Agentic</th>
+                <th class="sortable num" data-key="blended" title="Blended price per 1M tokens: 4.5% input + 94.85% cached input + 0.65% output (selected plan)">Blended&nbsp;$/1M</th>
+                <th class="sortable num" data-key="monthlyTokens">
+                  Tokens&nbsp;/&nbsp;mo
+                  <span class="info info-th" tabindex="0" role="button" aria-label="What tokens per month means">
+                    i
+                    <span class="info-pop" role="tooltip">
+                      <span class="info-head">Tokens per month</span>
+                      <span class="info-row"><span>Monthly allowance converted to tokens using the traffic-weighted Go usage mix: 4.5% input / 94.85% cached / 0.65% output.</span></span>
+                    </span>
+                  </span>
+                </th>
+                <th class="sortable" data-key="retention" title="Privacy group: ZDR = 0-day retention, no training · 30d = retained but not trained on · Contrib = prompts may be used for training">Data Retention</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="charts">
+        <div class="panel chart-panel">
+          <div class="panel-heading">
+            <h2>Intelligence vs. monthly tokens</h2>
+            <p id="chart-sub" class="panel-sub">Each dot is a model — up and to the right is better.</p>
+          </div>
+          <div class="chart-box"><canvas id="chart-tokens"></canvas></div>
+          <p class="panel-sub chart-credit">
+            Data: <a href="https://artificialanalysis.ai/" target="_blank" rel="noopener">Artificial Analysis</a>
+          </p>
+        </div>
+      </section>
+
+      <section id="unmatched-panel" class="panel" hidden>
+        <h2>No benchmark data found</h2>
+        <p class="muted">
+          These Go models had no match in Artificial Analysis. Add an entry to
+          <code>overrides.json</code> to map them manually.
+        </p>
+        <ul id="unmatched-list" class="chips"></ul>
+      </section>
+    </main>
+
+    <footer>
+      <span>
+        Benchmark data from
+        <a href="https://artificialanalysis.ai/" target="_blank" rel="noopener">Artificial Analysis</a>.
+      </span>
+      <span class="muted">Model list &amp; pricing from the OpenCode Go docs page.</span>
+    </footer>
+  </body>
+</html>

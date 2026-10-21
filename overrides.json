@@ -1,0 +1,11 @@
+{
+  "_comment": "Manual mapping from an OpenCode Go model id to an Artificial Analysis model slug. Values may be a slug string or { slug, note }. Use this for models whose names differ between the two catalogues.",
+  "qwen3.8-flash": {
+    "slug": "qwen3-8-flash-next",
+    "note": "AA only lists the 'Qwen3.8-Flash-Next' variant"
+  },
+  "deepseek-v4.1-flash": {
+    "slug": "deepseek-v4-1-flash-1017",
+    "note": "Go's model id now serves the 2026-10-17 (1017) checkpoint"
+  }
+}
