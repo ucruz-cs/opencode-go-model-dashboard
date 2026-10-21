@@ -73,7 +73,7 @@ The docs page publishes per-model token prices (Input, Output, Cached Read) and 
 
 Earlier versions used the "typical Go usage" profiles published on the Go docs page. Those are assumptions used to produce OpenCode's estimated request counts, and they imply a **98.84% cache hit rate** (98.5% is the cached share of all tokens, not the hit rate). Measured traffic is lower.
 
-This mix instead comes from [OpenCode Data](https://opencode.ai/data), which publishes a per-model `cachedInputPercent` over the last two months. We take all 29 models currently in the Go lineup, including the free ones, and map them to their OpenCode Data model pages:
+This mix instead comes from [OpenCode Data](https://opencode.ai/data), which publishes a per-model `cachedInputPercent` over the last two months. I take all 29 models currently in the Go lineup, including the free ones, and map them to their OpenCode Data model pages:
 
 - `LongCat 2.5 Preview Free` → `LongCat-2.5-Preview`
 - `Beam Free` → `beam`
@@ -89,7 +89,7 @@ The cache hit rate is `cached input / (cached + uncached input)`. Across those 2
 | Token-weighted mean | **95.46%** |
 | Token-weighted SD | 1.49 pp |
 
-We use the **token-weighted** mean because the global mix is applied across token volume, and usage is dominated by a few models. An equal-weight average would over-represent low-volume models such as Grok 4.7 (84.5%) and Kimi K3 (88.4%).
+I use the **token-weighted** mean because the global mix is applied across token volume, and usage is dominated by a few models. An equal-weight average would over-represent low-volume models such as Grok 4.7 (84.5%) and Kimi K3 (88.4%).
 
 The output share is measured as `total tokens − (cached + uncached input)` on the OpenCode Data tables, which include output and reasoning tokens. That gives about **0.65%** output+reasoning (the Go subset of the 7-day table gives ~0.66%). Converting the measured cache hit rate and output share to shares of all tokens:
 
