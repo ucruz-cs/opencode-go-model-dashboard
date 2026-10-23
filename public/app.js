@@ -4,6 +4,7 @@ let sortDir = "desc";
 let plan = "go"; // "go" | "plus"
 let privacyFilter = "all"; // "all" | "notraining" | "zdr"
 let tierFilter = "cheap"; // "cheap" | "both" | "expensive"
+let logX = true; // usage (tokens/mo) axis scale
 const charts = {};
 let currentVariants = [];
 
@@ -98,6 +99,24 @@ function fmtBlended(pricing) {
   return `$${v < 1 ? v.toFixed(3) : v.toFixed(2)}`;
 }
 
+/** Unlimited models have no finite tokens/month figure. */
+function isUnlimitedPricing(pricing) {
+  return (
+    Boolean(pricing?.unlimited) ||
+    (pricing?.blended === 0 && pricing?.monthlyTokens == null)
+  );
+}
+
+/** Round up to the next 1/2/5 × 10^n so the unlimited cap lands on a clean value. */
+function niceCeil(value) {
+  if (!Number.isFinite(value) || value <= 0) return 1;
+  const exponent = Math.floor(Math.log10(value));
+  const base = 10 ** exponent;
+  const fraction = value / base;
+  const step = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+  return step * base;
+}
+
 function fmtTokensValue(v) {
   if (v == null) return "–";
   if (v >= 1000) {
@@ -159,19 +178,22 @@ function render() {
   if (problems.length) showBanner(problems.join(" "), !dashboard.aaConfigured);
   else el("banner").hidden = true;
 
-  // Updated timestamps
-  const time = (iso) =>
+  // Updated timestamps (date + time)
+  const stamp = (iso) =>
     iso
-      ? new Date(iso).toLocaleTimeString(undefined, {
+      ? new Date(iso).toLocaleString(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
           hour: "numeric",
           minute: "2-digit",
         })
       : "–";
-  const goTime = time(dashboard.goDocsFetchedAt);
-  const benchTime = dashboard.aaFetchedAt
-    ? time(dashboard.aaFetchedAt) + (dashboard.aaFromCache ? " (cached)" : "")
+  const goStamp = stamp(dashboard.goDocsFetchedAt);
+  const benchStamp = dashboard.aaFetchedAt
+    ? stamp(dashboard.aaFetchedAt) + (dashboard.aaFromCache ? " (cached)" : "")
     : "–";
-  el("updated").textContent = `Pricing ${goTime} · Benchmarks ${benchTime}`;
+  el("updated").textContent = `Pricing ${goStamp} · Benchmarks ${benchStamp}`;
 
   // Stat cards. Everything on the page is scoped to the plan + privacy filters.
   el("models-label").textContent =
@@ -386,11 +408,31 @@ function zdrCell(privacy) {
 
 function renderCharts(rows) {
   if (typeof Chart === "undefined") return;
-  const points = rows.filter(
-    (m) =>
+
+  const pricingOf = (m) => activePricing(m);
+
+  const points = rows.filter((m) => {
+    const pricing = pricingOf(m);
+    return (
       m.metrics.intelligence != null &&
-      (activePricing(m)?.monthlyTokens ?? 0) > 0,
-  );
+      pricing != null &&
+      (isUnlimitedPricing(pricing) || pricing.monthlyTokens > 0)
+    );
+  });
+
+  const finiteTokens = points
+    .map(pricingOf)
+    .filter((p) => !isUnlimitedPricing(p) && Number.isFinite(p.monthlyTokens))
+    .map((p) => p.monthlyTokens);
+  const hasUnlimited = points.some((m) => isUnlimitedPricing(pricingOf(m)));
+  const unlimitedX = hasUnlimited
+    ? niceCeil(Math.max(...finiteTokens, 1) * 1.15)
+    : null;
+
+  const usageOf = (m) => {
+    const pricing = pricingOf(m);
+    return isUnlimitedPricing(pricing) ? unlimitedX : pricing.monthlyTokens;
+  };
 
   const groups = new Map();
   for (const m of points) {
@@ -405,34 +447,37 @@ function renderCharts(rows) {
           .map((g) => ({
             color: colorFor(g[0].creator),
             points: g.map((m) => ({
-              x: m.metrics.intelligence,
-              y: activePricing(m).monthlyTokens,
+              x: usageOf(m),
+              y: m.metrics.intelligence,
             })),
           }))
       : [];
 
   const sub = el("chart-sub");
   if (sub) {
+    const unlimitedNote = hasUnlimited
+      ? " Unlimited models are pinned at the right edge (∞)."
+      : "";
     sub.textContent =
       tierFilter === "both"
-        ? "Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest tier. Up and to the right is better."
+        ? `Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest-priced tier. Up and to the right is better (smarter and more usage).${unlimitedNote}`
         : `Showing the ${
             tierFilter === "expensive" ? "highest-priced" : "lowest-priced"
-          } tier of each model. Up and to the right is better.`;
+          } tier of each model. Up and to the right is better (smarter and more usage).${unlimitedNote}`;
   }
 
-  buildScatter(
-    "chart-tokens",
-    points,
-    (m) => activePricing(m).monthlyTokens,
-    "Tokens per month",
-    {
-      logY: true,
-      fmtY: fmtTokensValue,
-      connectors,
-      showTiers: tierFilter === "both",
-    },
-  );
+  buildScatter("chart-usage", points, {
+    xGetter: usageOf,
+    yGetter: (m) => m.metrics.intelligence,
+    xLabel: "Tokens / mo",
+    yLabel: "Intelligence Index",
+    logX,
+    fmtX: (value) =>
+      hasUnlimited && value >= unlimitedX * 0.999 ? "∞" : fmtTokensValue(value),
+    fmtY: (value) => value,
+    connectors,
+    showTiers: tierFilter === "both",
+  });
 }
 
 const tierConnectorPlugin = {
@@ -453,7 +498,7 @@ const tierConnectorPlugin = {
           x: scales.x.getPixelForValue(p.x),
           y: scales.y.getPixelForValue(p.y),
         }))
-        .sort((a, b) => a.y - b.y);
+        .sort((a, b) => a.x - b.x);
       if (pts.length < 2) continue;
 
       const first = pts[0];
@@ -467,12 +512,12 @@ const tierConnectorPlugin = {
 
       // Small caps so the connector reads as a range bar, not a trend line.
       ctx.beginPath();
-      ctx.moveTo(first.x - 4, first.y);
-      ctx.lineTo(first.x + 4, first.y);
+      ctx.moveTo(first.x, first.y - 4);
+      ctx.lineTo(first.x, first.y + 4);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(last.x - 4, last.y);
-      ctx.lineTo(last.x + 4, last.y);
+      ctx.moveTo(last.x, last.y - 4);
+      ctx.lineTo(last.x, last.y + 4);
       ctx.stroke();
     }
 
@@ -480,23 +525,29 @@ const tierConnectorPlugin = {
   },
 };
 
-function buildScatter(canvasId, rows, yGetter, yLabel, opts = {}) {
+function buildScatter(canvasId, rows, opts = {}) {
+  const { xGetter, yGetter, xLabel, yLabel } = opts;
+
   const points = rows
-    .map((m) => ({
-      x: m.metrics.intelligence,
-      y: yGetter(m),
-      label: m.name,
-      creator: m.creator ?? "?",
-      tier: m.tier,
-      price: activePricing(m)?.blended,
-      hollow: Boolean(
-        opts.showTiers &&
-          m.multipleTiers &&
-          m.isMostExpensiveTier &&
-          !m.isCheapestTier,
-      ),
-    }))
-    .filter((p) => p.y != null && (!opts.logY || p.y > 0));
+    .map((m) => {
+      const pricing = activePricing(m);
+      return {
+        x: xGetter(m),
+        y: yGetter(m),
+        label: m.name,
+        creator: m.creator ?? "?",
+        tier: m.tier,
+        tokens: pricing?.monthlyTokens ?? null,
+        unlimited: isUnlimitedPricing(pricing),
+        hollow: Boolean(
+          opts.showTiers &&
+            m.multipleTiers &&
+            m.isMostExpensiveTier &&
+            !m.isCheapestTier,
+        ),
+      };
+    })
+    .filter((p) => p.x != null && p.y != null && (!opts.logX || p.x > 0));
 
   const byCreator = new Map();
   for (const p of points) {
@@ -543,21 +594,33 @@ function buildScatter(canvasId, rows, yGetter, yLabel, opts = {}) {
             label: (ctx) => {
               const point = ctx.raw;
               const tier = point.tier ? ` [${point.tier}]` : "";
-              const price =
-                point.price != null
-                  ? ` · $${point.price < 1 ? point.price.toFixed(3) : point.price.toFixed(2)}/1M`
-                  : "";
-              return `${point.label}${tier}: Intelligence ${point.x}, ${yLabel} ${
-                opts.fmtY ? opts.fmtY(point.y) : round(point.y)
-              }${price}`;
+              const usage = point.unlimited
+                ? "Unlimited usage"
+                : point.tokens != null
+                  ? `${fmtTokensValue(point.tokens).replace(/([MB])$/, "$1 tok")}/mo`
+                  : null;
+              const intelligence = opts.fmtY ? opts.fmtY(point.y) : round(point.y);
+              return `${point.label}${tier}: Intelligence ${intelligence}${
+                usage ? ` · ${usage}` : ""
+              }`;
             },
           },
         },
       },
       scales: {
         x: {
-          title: { display: true, text: "Intelligence Index" },
+          title: { display: true, text: xLabel },
           grid: { color: "#eef0f3" },
+          ticks: {
+            callback: (value) => (opts.fmtX ? opts.fmtX(value) : value),
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 8,
+            padding: 6,
+          },
+          ...(opts.logX
+            ? { type: "logarithmic", grace: "8%" }
+            : { beginAtZero: true }),
         },
         y: {
           title: { display: true, text: yLabel },
@@ -565,7 +628,7 @@ function buildScatter(canvasId, rows, yGetter, yLabel, opts = {}) {
           ticks: {
             callback: (value) => (opts.fmtY ? opts.fmtY(value) : value),
           },
-          ...(opts.logY ? { type: "logarithmic" } : { beginAtZero: true }),
+          ...(opts.logY ? { type: "logarithmic" } : {}),
         },
       },
     },
@@ -729,6 +792,16 @@ function wireControls() {
     btn.addEventListener("click", () => {
       tierFilter = btn.dataset.tier;
       for (const other of document.querySelectorAll("#tier-filter .segmented-btn")) {
+        other.classList.toggle("active", other === btn);
+      }
+      render();
+    });
+  }
+
+  for (const btn of document.querySelectorAll("#chart-scale .segmented-btn")) {
+    btn.addEventListener("click", () => {
+      logX = btn.dataset.scale === "log";
+      for (const other of document.querySelectorAll("#chart-scale .segmented-btn")) {
         other.classList.toggle("active", other === btn);
       }
       render();

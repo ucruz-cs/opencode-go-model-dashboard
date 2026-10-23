@@ -387,7 +387,9 @@ td .model-id { color: var(--muted); font-size: 12px; }
 
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; }
 .chart-panel .panel-heading { margin-bottom: 12px; }
-.chart-box { position: relative; height: 390px; }
+.chart-panel .panel-head { align-items: flex-start; flex-wrap: wrap; }
+.chart-panel .panel-head .panel-heading { margin-bottom: 0; }
+.chart-box { position: relative; height: 440px; }
 .chart-credit { margin-top: 12px; }
 
 .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 12px 0 0; }

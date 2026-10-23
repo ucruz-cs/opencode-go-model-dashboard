@@ -2,7 +2,7 @@
   "name": "opencode-go-model-dashboard",
   "version": "1.0.0",
   "private": true,
-  "description": "Unofficial dashboard for OpenCode Go: Artificial Analysis benchmarks, blended pricing, tokens/month and data retention for every model.",
+  "description": "Unofficial dashboard for OpenCode Go: Artificial Analysis benchmarks, effective token pricing, tokens/month and data retention for every model.",
   "type": "module",
   "engines": {
     "node": ">=20"

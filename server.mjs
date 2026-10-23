@@ -188,7 +188,7 @@ server.listen(cfg.PORT, async () => {
       `  Loaded ${dash.counts.matched}/${dash.counts.go} Go models with benchmark data` +
         (dash.aaFromCache ? " (AA data from cache)" : " (AA data fetched live)"),
     );
-    console.log(`  Pricing (blended) available for ${dash.counts.priced} models`);
+    console.log(`  Pricing (effective) available for ${dash.counts.priced} models`);
     for (const w of dash.warnings) console.warn(`  ! ${w}`);
   } catch (err) {
     console.error(`  ! Startup refresh failed: ${err.message}`);

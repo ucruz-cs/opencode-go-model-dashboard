@@ -101,7 +101,7 @@
               <span id="stat-smartest" class="best-val">–</span>
             </li>
             <li title="Normalised all-rounder score: (intelligence ÷ best intelligence) × (tokens/mo ÷ best tokens/mo). Both factors count — higher is better.">
-              <span class="best-key">All-rounder <small>intel × tokens</small></span>
+              <span class="best-key">All-rounder <small>intelligence × tokens</small></span>
               <span id="stat-intel-token" class="best-val">–</span>
             </li>
             <li>
@@ -130,14 +130,37 @@
                 <th class="sortable num" data-key="intelligence">Intelligence</th>
                 <th class="sortable num" data-key="coding">Coding</th>
                 <th class="sortable num" data-key="agentic">Agentic</th>
-                <th class="sortable num" data-key="blended" title="Blended price per 1M tokens: 4.5% input + 94.85% cached input + 0.65% output (selected plan)">Blended&nbsp;$/1M</th>
+                <th class="sortable num" data-key="blended">
+                  Effective&nbsp;$/1M&nbsp;tok
+                  <span class="info info-th" tabindex="0" role="button" aria-label="How the effective price is computed">
+                    i
+                    <span class="info-pop" role="tooltip">
+                      <span class="info-head">Effective price</span>
+                      <span class="info-row">
+                        <strong>FORMULA</strong>
+                        <span>4.5% × input + 94.85% × cached read + 0.65% × output, per 1M tokens.</span>
+                      </span>
+                      <span class="info-row">
+                        <strong>USAGE MIX</strong>
+                        <span>Measured from OpenCode Go traffic (95.46% cache hit rate) and applied to every model, so prices stay comparable.</span>
+                      </span>
+                    </span>
+                  </span>
+                </th>
                 <th class="sortable num" data-key="monthlyTokens">
                   Tokens&nbsp;/&nbsp;mo
-                  <span class="info info-th" tabindex="0" role="button" aria-label="What tokens per month means">
+                  <span class="info info-th" tabindex="0" role="button" aria-label="How tokens per month is computed">
                     i
                     <span class="info-pop" role="tooltip">
                       <span class="info-head">Tokens per month</span>
-                      <span class="info-row"><span>Monthly allowance converted to tokens using the traffic-weighted Go usage mix: 4.5% input / 94.85% cached / 0.65% output.</span></span>
+                      <span class="info-row">
+                        <strong>FORMULA</strong>
+                        <span>Monthly allowance ($) ÷ effective price per 1M tokens.</span>
+                      </span>
+                      <span class="info-row">
+                        <strong>MIX</strong>
+                        <span>Uses the same traffic-weighted mix as the Effective $/1M tok column, so this is the number of effective tokens the plan buys each month.</span>
+                      </span>
                     </span>
                   </span>
                 </th>
@@ -152,11 +175,22 @@
 
       <section class="charts">
         <div class="panel chart-panel">
-          <div class="panel-heading">
-            <h2>Intelligence vs. monthly tokens</h2>
-            <p id="chart-sub" class="panel-sub">Each dot is a model — up and to the right is better.</p>
+          <div class="panel-head">
+            <div class="panel-heading">
+              <h2>Intelligence vs. monthly tokens</h2>
+              <p id="chart-sub" class="panel-sub">
+                Each dot is a model — up and to the right is better (smarter and more usage).
+              </p>
+            </div>
+            <div class="filter-group">
+              <span class="filter-title">Usage scale</span>
+              <div id="chart-scale" class="segmented" role="group" aria-label="Usage axis scale">
+                <button type="button" class="segmented-btn" data-scale="linear">Linear</button>
+                <button type="button" class="segmented-btn active" data-scale="log">Log</button>
+              </div>
+            </div>
           </div>
-          <div class="chart-box"><canvas id="chart-tokens"></canvas></div>
+          <div class="chart-box"><canvas id="chart-usage"></canvas></div>
           <p class="panel-sub chart-credit">
             Data: <a href="https://artificialanalysis.ai/" target="_blank" rel="noopener">Artificial Analysis</a>
           </p>

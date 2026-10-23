@@ -7,7 +7,7 @@ A small, dependency-free dashboard that shows how the models in your **OpenCode 
 On start it:
 
 1. parses the OpenCode Go model list, token prices and privacy table from the MIT-licensed Markdown source behind the docs (`services/www/src/docs/content/console/go.mdx` in [anomalyco/opencode](https://github.com/anomalyco/opencode));
-2. computes a **blended price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many blended tokens the monthly Go allowance buys (`monthly $ ÷ blended`);
+2. computes an **effective price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many effective tokens the monthly Go allowance buys (`monthly $ ÷ effective price`);
 3. fetches Artificial Analysis benchmark data once (paginated) and caches it;
 4. joins the two catalogues by model name and serves the result in a web UI.
 
@@ -60,14 +60,14 @@ settings live in `settings.json` (committed).
 
 Missing keys fall back to the defaults above; an unreadable `settings.json` logs a warning and uses all defaults. The file holds no secrets, so it is safe to commit.
 
-The AA free tier allows ~100 requests/day, and the full list takes ~4 paginated requests. AA data is cached in `cache/aa.json`; use the **Refresh** button to force a re-fetch. The OpenCode Go docs are cached in `cache/go.json`: startup and page loads reuse the cached copy, and **Refresh** fetches a new one. If no Go cache exists yet, it is fetched once on startup to populate the file. The cache stores the parsed payload, including blended prices, so press **Refresh** after changing the blend constants or tier parsing, and bump `CACHE_VERSION` in `lib/goLimits.mjs` whenever the cached shape changes.
+The AA free tier allows ~100 requests/day, and the full list takes ~4 paginated requests. AA data is cached in `cache/aa.json`; use the **Refresh** button to force a re-fetch. The OpenCode Go docs are cached in `cache/go.json`: startup and page loads reuse the cached copy, and **Refresh** fetches a new one. If no Go cache exists yet, it is fetched once on startup to populate the file. The cache stores the parsed payload, including effective prices, so press **Refresh** after changing the usage-mix constants or tier parsing, and bump `CACHE_VERSION` in `lib/goLimits.mjs` whenever the cached shape changes.
 
 ## Pricing
 
 The docs page publishes per-model token prices (Input, Output, Cached Read) and a monthly allowance in $. The dashboard shows:
 
-- **Blended $/1M** — `0.045 × input + 0.9485 × cached_read + 0.0065 × output` (the traffic-weighted Go usage mix described below).
-- **Tokens / mo** — `monthly_allowance ÷ blended` (millions of blended tokens).
+- **Effective $/1M tok** — `0.045 × input + 0.9485 × cached_read + 0.0065 × output` (the traffic-weighted Go usage mix described below).
+- **Tokens / mo** — `monthly_allowance ÷ effective price` (millions of effective tokens).
 
 ### Where the 4.5 / 94.85 / 0.65 % mix comes from
 
@@ -107,7 +107,7 @@ This replaces Artificial Analysis' 7/2/1 (70% cached / 20% input / 10% output) m
 
 The current (possibly limited-time-bonused) monthly figure is used, taken from the bold value in the docs table (e.g. Gemini 4 Argon Contributor's `$30 → $60` 2× bonus is shown as **$60**).
 
-Tiered rows (context-size or peak/off-peak) are kept as separate price variants. The **Price tiers** filter selects the **Lowest** tier (default), **All tiers**, or **Highest** tier by blended price; single-tier models are unaffected. With **All tiers**, each variant is an independent table row and chart point, the model count stays per base model, the best-models cards are computed across the shown variants, and dashed range bars in the chart connect variants of the same model. The unmatched panel follows the same filter, and the table panel shows how many variants are being displayed.
+Tiered rows (context-size or peak/off-peak) are kept as separate price variants. The **Price tiers** filter selects the **Lowest** tier (default), **All tiers**, or **Highest** tier by effective price; single-tier models are unaffected. With **All tiers**, each variant is an independent table row and chart point, the model count stays per base model, the best-models cards are computed across the shown variants, and dashed range bars in the chart connect variants of the same model. The unmatched panel follows the same filter, and the table panel shows how many variants are being displayed.
 
 ## Matching OpenCode Go models to Artificial Analysis
 
