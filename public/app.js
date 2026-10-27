@@ -8,6 +8,9 @@ let logX = true; // usage (tokens/mo) axis scale
 const charts = {};
 let currentVariants = [];
 
+/** Days after which cached benchmark data is flagged as stale in the banner. */
+const STALE_AFTER_DAYS = 7;
+
 /** Pricing for the selected subscription plan (falls back to Go if Plus is missing). */
 function activePricing(model) {
   if (model.isVariant) return model.pricing;
@@ -175,6 +178,13 @@ function render() {
     );
   }
   for (const w of dashboard.warnings ?? []) problems.push(w);
+  const ageMs = dashboard.aaFetchedAt
+    ? Date.now() - Date.parse(dashboard.aaFetchedAt)
+    : NaN;
+  if (Number.isFinite(ageMs) && ageMs > STALE_AFTER_DAYS * 86_400_000) {
+    const days = Math.floor(ageMs / 86_400_000);
+    problems.push(`Benchmark data is ${days} days old — press Refresh to update.`);
+  }
   if (problems.length) showBanner(problems.join(" "), !dashboard.aaConfigured);
   else el("banner").hidden = true;
 

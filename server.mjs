@@ -56,26 +56,24 @@ async function refresh({ force = false } = {}) {
     }
   }
 
+  // Artificial Analysis: like the Go docs, the on-disk cache is reused for as
+  // long as it lasts. Only an explicit refresh (the Refresh button) fetches a
+  // new copy; if no cache exists yet, fetch once to populate it.
   const cached = readAaCache();
-  const ttlMs = Math.max(0, cfg.AA_CACHE_TTL_MINUTES) * 60_000;
-  const isFresh =
-    cached?.fetchedAt && Date.now() - Date.parse(cached.fetchedAt) < ttlMs;
-
-  let aa = cached;
-  let fromCache = false;
+  let aa = cached ?? { models: [], fetchedAt: null, tier: null };
+  let fromCache = Boolean(cached);
 
   if (!cfg.AA_API_KEY) {
     warnings.push(
       "No AA_API_KEY configured. Showing OpenCode Go models without benchmark data.",
     );
-    aa = cached ?? { models: [], fetchedAt: null, tier: null };
-    fromCache = Boolean(cached);
-  } else if (!force && isFresh) {
+  } else if (!force && cached) {
     fromCache = true;
   } else {
     try {
       const { models, tier } = await fetchAaModels(cfg.AA_BASE_URL, cfg.AA_API_KEY);
       aa = writeAaCache(models, { tier });
+      fromCache = false;
     } catch (err) {
       if (cached?.models?.length) {
         fromCache = true;
@@ -184,9 +182,14 @@ server.listen(cfg.PORT, async () => {
         ? "from cache"
         : "fetched live";
     console.log(`  Go docs ${goState}`);
+    const aaState = !dash.aaConfigured
+      ? " (AA data not fetched — no API key)"
+      : dash.aaFromCache
+        ? " (AA data from cache)"
+        : " (AA data fetched live)";
     console.log(
       `  Loaded ${dash.counts.matched}/${dash.counts.go} Go models with benchmark data` +
-        (dash.aaFromCache ? " (AA data from cache)" : " (AA data fetched live)"),
+        aaState,
     );
     console.log(`  Pricing (effective) available for ${dash.counts.priced} models`);
     for (const w of dash.warnings) console.warn(`  ! ${w}`);

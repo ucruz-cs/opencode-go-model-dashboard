@@ -1,5 +1,4 @@
 {
-  "AA_CACHE_TTL_MINUTES": 360,
   "GO_DOCS_URL": "https://raw.githubusercontent.com/anomalyco/opencode/dev/services/www/src/docs/content/console/go.mdx",
   "AA_BASE_URL": "https://artificialanalysis.ai/api/v2"
 }

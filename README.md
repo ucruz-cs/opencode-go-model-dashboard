@@ -8,10 +8,10 @@ On start it:
 
 1. parses the OpenCode Go model list, token prices and privacy table from the MIT-licensed Markdown source behind the docs (`services/www/src/docs/content/console/go.mdx` in [anomalyco/opencode](https://github.com/anomalyco/opencode));
 2. computes an **effective price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many effective tokens the monthly Go allowance buys (`monthly $ ÷ effective price`);
-3. fetches Artificial Analysis benchmark data once (paginated) and caches it;
+3. loads Artificial Analysis benchmark data from its cache, fetching it (paginated) only when no cache exists;
 4. joins the two catalogues by model name and serves the result in a web UI.
 
-The model list, prices and privacy data come from that Markdown source. The payload is cached in `cache/go.json` and re-fetched only when you press **Refresh** (a first run with no cache fetches it once); benchmarks come from Artificial Analysis. Any model without a published price shows `–`.
+The model list, prices and privacy data come from that Markdown source; benchmarks come from Artificial Analysis. Both payloads are cached locally (`cache/go.json` and `cache/aa.json`) and re-fetched **only** when you press **Refresh**, or on the first run when no cache exists yet.
 
 Only Artificial Analysis' quality benchmarks (Intelligence, Coding, Agentic and the capability indices) are shown. AA's speed/latency measurements are excluded because they are measured on AA's own inference and don't reflect how the models are served through OpenCode Go.
 
@@ -52,7 +52,6 @@ settings live in `settings.json` (committed).
 
 | Key                    | Default                                | Purpose                              |
 | ---------------------- | -------------------------------------- | ------------------------------------ |
-| `AA_CACHE_TTL_MINUTES` | `360`                                  | How long cached AA data stays fresh. |
 | `GO_DOCS_URL`          | raw `go.mdx` on the `dev` branch¹      | OpenCode Go docs source (Markdown).  |
 | `AA_BASE_URL`          | `https://artificialanalysis.ai/api/v2` | Artificial Analysis API base.        |
 
@@ -60,7 +59,7 @@ settings live in `settings.json` (committed).
 
 Missing keys fall back to the defaults above; an unreadable `settings.json` logs a warning and uses all defaults. The file holds no secrets, so it is safe to commit.
 
-The AA free tier allows ~100 requests/day, and the full list takes ~4 paginated requests. AA data is cached in `cache/aa.json`; use the **Refresh** button to force a re-fetch. The OpenCode Go docs are cached in `cache/go.json`: startup and page loads reuse the cached copy, and **Refresh** fetches a new one. If no Go cache exists yet, it is fetched once on startup to populate the file. The cache stores the parsed payload, including effective prices, so press **Refresh** after changing the usage-mix constants or tier parsing, and bump `CACHE_VERSION` in `lib/goLimits.mjs` whenever the cached shape changes.
+The AA free tier allows ~100 requests/day, and the full list takes ~4 paginated requests. Both caches (`cache/go.json` and `cache/aa.json`) are reused by startup and every page load; only the **Refresh** button forces a new fetch, and a first run with no cache fetches once to populate the file.
 
 ## Pricing
 
