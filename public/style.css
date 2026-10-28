@@ -7,6 +7,8 @@
   --accent: #2f6feb;
   --accent-soft: #eaf1fe;
   --good: #1a9d6b;
+  --pending: #a9c6f7;
+  --unmatched: #d5dbe3;
 }
 
 * { box-sizing: border-box; }
@@ -264,9 +266,10 @@ main { padding: 24px 28px 48px; max-width: 1400px; margin: 0 auto; }
 }
 
 .meter {
+  display: flex;
   height: 6px;
   border-radius: 999px;
-  background: var(--border);
+  background: var(--unmatched);
   overflow: hidden;
   line-height: 0;
   margin-top: 2px;
@@ -279,6 +282,23 @@ main { padding: 24px 28px 48px; max-width: 1400px; margin: 0 auto; }
   background: linear-gradient(90deg, var(--accent), #7aa7ff);
   transition: width .4s ease;
 }
+.meter-partial {
+  background: var(--pending);
+}
+.count-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.count-key .swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.swatch-with { background: linear-gradient(90deg, var(--accent), #7aa7ff); }
+.swatch-pending { background: var(--pending); }
+.swatch-unmatched { background: var(--unmatched); }
 
 /* Best-models block */
 .best-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }

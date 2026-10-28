@@ -7,5 +7,9 @@
   "deepseek-v4.1-flash": {
     "slug": "deepseek-v4-1-flash-1017",
     "note": "Go's model id now serves the 2026-10-17 (1017) checkpoint"
+  },
+  "beam-free": {
+    "slug": "reflection-beam",
+    "note": "AA lists Reflection's Beam 1.0; Go serves it free for a limited time"
   }
 }

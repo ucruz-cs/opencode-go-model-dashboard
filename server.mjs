@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { loadConfig, ROOT } from "./lib/env.mjs";
 import { fetchGoDocs, readGoCache, writeGoCache } from "./lib/goLimits.mjs";
-import { fetchAaModels, readAaCache, writeAaCache } from "./lib/aaModels.mjs";
+import { AA_CACHE_VERSION, fetchAaModels, readAaCache, writeAaCache } from "./lib/aaModels.mjs";
 import { buildDashboard } from "./lib/match.mjs";
 
 const cfg = loadConfig();
@@ -58,8 +58,10 @@ async function refresh({ force = false } = {}) {
 
   // Artificial Analysis: like the Go docs, the on-disk cache is reused for as
   // long as it lasts. Only an explicit refresh (the Refresh button) fetches a
-  // new copy; if no cache exists yet, fetch once to populate it.
+  // new copy; if no cache exists yet, or it was written by another benchmark
+  // suite version, fetch once to populate it.
   const cached = readAaCache();
+  const cacheIsCurrent = cached?.version === AA_CACHE_VERSION;
   let aa = cached ?? { models: [], fetchedAt: null, tier: null };
   let fromCache = Boolean(cached);
 
@@ -67,7 +69,7 @@ async function refresh({ force = false } = {}) {
     warnings.push(
       "No AA_API_KEY configured. Showing OpenCode Go models without benchmark data.",
     );
-  } else if (!force && cached) {
+  } else if (!force && cacheIsCurrent) {
     fromCache = true;
   } else {
     try {

@@ -84,12 +84,14 @@
           <div class="count-row">
             <span id="stat-total" class="count-big">–</span>
             <span class="count-detail">
-              <strong id="stat-matched">–</strong>
-              <span>with benchmark data</span>
+              <span class="count-key"><span class="swatch swatch-with"></span><strong id="stat-with">–</strong> with benchmarks</span>
+              <span class="count-key"><span class="swatch swatch-pending"></span><strong id="stat-pending">–</strong> matched, no score yet</span>
+              <span class="count-key"><span class="swatch swatch-unmatched"></span><strong id="stat-unmatched">–</strong> not matched in AA</span>
             </span>
           </div>
           <div class="meter" role="presentation">
             <span id="stat-meter" class="meter-fill"></span>
+            <span id="stat-meter-partial" class="meter-fill meter-partial"></span>
           </div>
         </div>
 
@@ -127,9 +129,32 @@
               <tr>
                 <th class="sortable" data-key="name">Model</th>
                 <th class="sortable" data-key="creator">Creator</th>
-                <th class="sortable num" data-key="intelligence">Intelligence</th>
-                <th class="sortable num" data-key="coding">Coding</th>
-                <th class="sortable num" data-key="agentic">Agentic</th>
+                <th class="sortable num" data-key="intelligence">
+                  Intelligence
+                  <span class="info info-th" tabindex="0" role="button" aria-label="What the Intelligence Index measures">
+                    i
+                    <span class="info-pop" role="tooltip">
+                      <span class="info-head">Artificial Analysis Intelligence Index</span>
+                      <span class="info-row">
+                        <strong>VERSION</strong>
+                        <span>v5.0 — an equally weighted average of Knowledge Work, Coding, Science and General.</span>
+                      </span>
+                    </span>
+                  </span>
+                </th>
+                <th class="sortable num" data-key="engineering">
+                  Engineering
+                  <span class="info info-th" tabindex="0" role="button" aria-label="What the Engineering index measures">
+                    i
+                    <span class="info-pop" role="tooltip">
+                      <span class="info-head">Artificial Analysis Engineering Index</span>
+                      <span class="info-row">
+                        <strong>MEASURES</strong>
+                        <span>Engineering knowledge, science, reasoning, agentic coding and agentic knowledge work.</span>
+                      </span>
+                    </span>
+                  </span>
+                </th>
                 <th class="sortable num" data-key="blended">
                   Effective&nbsp;$/1M&nbsp;tok
                   <span class="info info-th" tabindex="0" role="button" aria-label="How the effective price is computed">
@@ -171,6 +196,7 @@
             <tbody></tbody>
           </table>
         </div>
+        <p id="coverage-note" class="panel-sub muted" hidden></p>
       </section>
 
       <section class="charts">

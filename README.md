@@ -13,7 +13,7 @@ On start it:
 
 The model list, prices and privacy data come from that Markdown source; benchmarks come from Artificial Analysis. Both payloads are cached locally (`cache/go.json` and `cache/aa.json`) and re-fetched **only** when you press **Refresh**, or on the first run when no cache exists yet.
 
-Only Artificial Analysis' quality benchmarks (Intelligence, Coding, Agentic and the capability indices) are shown. AA's speed/latency measurements are excluded because they are measured on AA's own inference and don't reflect how the models are served through OpenCode Go.
+Only Artificial Analysis' quality benchmarks are shown: the **Intelligence Index** (v5.0, an equally weighted average of Knowledge Work, Coding, Science and General) and the **Engineering** capability index. Models AA has not scored on the current index version yet show `–` and are left out of the chart. AA's speed/latency measurements are excluded because they are measured on AA's own inference and don't reflect how the models are served through OpenCode Go.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ settings live in `settings.json` (committed).
 
 Missing keys fall back to the defaults above; an unreadable `settings.json` logs a warning and uses all defaults. The file holds no secrets, so it is safe to commit.
 
-The AA free tier allows ~100 requests/day, and the full list takes ~4 paginated requests. Both caches (`cache/go.json` and `cache/aa.json`) are reused by startup and every page load; only the **Refresh** button forces a new fetch, and a first run with no cache fetches once to populate the file.
+The AA free tier allows 1,000 requests/day, and the full list takes ~4 paginated requests. Both caches (`cache/go.json` and `cache/aa.json`) are reused by startup and every page load; only the **Refresh** button forces a new fetch, and a first run with no cache fetches once to populate the file. The AA cache is versioned (`AA_CACHE_VERSION` in `lib/aaModels.mjs`); a cache written for a different benchmark-suite version is refreshed once on startup.
 
 ## Pricing
 

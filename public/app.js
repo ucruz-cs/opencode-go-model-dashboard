@@ -208,15 +208,20 @@ function render() {
   // Stat cards. Everything on the page is scoped to the plan + privacy filters.
   el("models-label").textContent =
     plan === "plus" ? "Models in Go Plus" : "Models in Go";
+  const indexVersion = dashboard.aaIndexVersion ?? "5.0";
   const models = filteredModels();
   const variants = models.flatMap(tierVariants);
   currentVariants = variants;
   const unmatched = filteredUnmatched();
   const totalGo = models.length + unmatched.length;
-  const matchedGo = models.length;
+  const withBenchmarks = models.filter((m) => m.metrics.intelligence != null).length;
+  const pending = models.length - withBenchmarks;
   el("stat-total").textContent = totalGo;
-  el("stat-matched").textContent = matchedGo;
-  el("stat-meter").style.width = `${totalGo ? (matchedGo / totalGo) * 100 : 0}%`;
+  el("stat-with").textContent = withBenchmarks;
+  el("stat-pending").textContent = pending;
+  el("stat-unmatched").textContent = unmatched.length;
+  el("stat-meter").style.width = `${totalGo ? (withBenchmarks / totalGo) * 100 : 0}%`;
+  el("stat-meter-partial").style.width = `${totalGo ? (pending / totalGo) * 100 : 0}%`;
 
   // Colour palette is built from the full set so colours stay stable when the
   // privacy filter changes; the legend only lists creators that are visible.
@@ -282,6 +287,18 @@ function render() {
   renderLegend();
   renderCharts(variants);
   renderUnmatched(unmatched);
+
+  // Models matched to AA but not yet scored on the current index version.
+  const matched = dashboard.models.length;
+  const scored = dashboard.models.filter((m) => m.metrics.intelligence != null).length;
+  const coverage = el("coverage-note");
+  if (matched > scored) {
+    coverage.textContent = `${matched - scored} of ${matched} matched models have no Intelligence Index v${indexVersion} score yet — Artificial Analysis is still backfilling the current index.`;
+    coverage.hidden = false;
+  } else {
+    coverage.textContent = "";
+    coverage.hidden = true;
+  }
 }
 
 function sortValue(m, key) {
@@ -367,8 +384,7 @@ function renderTable(rows = currentVariants) {
         m.creator,
       )}"></span>${escapeHtml(m.creator ?? "–")}</td>
       <td class="num">${scoreCell(m.metrics.intelligence)}</td>
-      <td class="num">${fmt.num(m.metrics.coding)}</td>
-      <td class="num">${fmt.num(m.metrics.agentic)}</td>
+      <td class="num">${fmt.num(m.metrics.engineering)}</td>
       <td class="num">${fmtBlended(p)}</td>
       <td class="num">${fmtTokens(p)}</td>
       <td>${zdrCell(m.privacy)}</td>
@@ -468,12 +484,16 @@ function renderCharts(rows) {
     const unlimitedNote = hasUnlimited
       ? " Unlimited models are pinned at the right edge (∞)."
       : "";
-    sub.textContent =
+    const versionNote = ` Scores are from the Artificial Analysis Intelligence Index v${
+      dashboard.aaIndexVersion ?? "5.0"
+    }.`;
+    const base =
       tierFilter === "both"
         ? `Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest-priced tier. Up and to the right is better (smarter and more usage).${unlimitedNote}`
         : `Showing the ${
             tierFilter === "expensive" ? "highest-priced" : "lowest-priced"
           } tier of each model. Up and to the right is better (smarter and more usage).${unlimitedNote}`;
+    sub.textContent = base + versionNote;
   }
 
   buildScatter("chart-usage", points, {
