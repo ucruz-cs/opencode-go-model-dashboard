@@ -4,6 +4,10 @@ A small, dependency-free dashboard that shows how the models in your **OpenCode 
 
 > **Unofficial project.** Not affiliated with, endorsed by, or supported by Anomaly Innovations, Inc. or Artificial Analysis. "OpenCode" and "OpenCode Go" are trademarks of Anomaly Innovations, Inc.
 
+[![OpenCode Go model dashboard](docs/screenshot.png)](docs/screenshot.png)
+
+> **Illustrative screenshot.** Artificial Analysis benchmark values in the table are blurred, and the chart plots synthetic intelligence scores, not real benchmark results. Pricing, token allowances and retention data are real OpenCode Go data. AA's free API is for internal use only, so no AA benchmark values are reproduced in this image. See [Data sources, attribution & licensing](#data-sources-attribution--licensing).
+
 On start it:
 
 1. parses the OpenCode Go model list, token prices and privacy table from the MIT-licensed Markdown source behind the docs (`services/www/src/docs/content/console/go.mdx` in [anomalyco/opencode](https://github.com/anomalyco/opencode));
