@@ -59,7 +59,7 @@ settings live in `settings.json` (committed).
 
 Missing keys fall back to the defaults above; an unreadable `settings.json` logs a warning and uses all defaults. The file holds no secrets, so it is safe to commit.
 
-The AA free tier allows 1,000 requests/day, and the full list takes ~4 paginated requests. Both caches (`cache/go.json` and `cache/aa.json`) are reused by startup and every page load; only the **Refresh** button forces a new fetch, and a first run with no cache fetches once to populate the file. The AA cache is versioned (`AA_CACHE_VERSION` in `lib/aaModels.mjs`); a cache written for a different benchmark-suite version is refreshed once on startup.
+The AA free tier allows 100 requests per fixed 24-hour window, shared by every key on the same user or organization scope, and the full list takes ~4 paginated requests. Both caches (`cache/go.json` and `cache/aa.json`) are reused by startup and every page load; only the **Refresh** button forces a new fetch, and a first run with no cache fetches once to populate the file. The AA cache is versioned (`AA_CACHE_VERSION` in `lib/aaModels.mjs`); a cache written for a different benchmark-suite version is refreshed once on startup.
 
 ## Pricing
 
