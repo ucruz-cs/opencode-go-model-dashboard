@@ -23,7 +23,7 @@ body {
 .topbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: end;
+  align-items: center;
   gap: 16px 24px;
   padding: 20px 28px;
   background: var(--panel);
@@ -47,9 +47,10 @@ h2 { font-size: 15px; margin: 0; }
   flex-wrap: wrap;
 }
 
-.actions { display: flex; align-items: center; align-self: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+.actions { display: flex; align-items: center; gap: 16px; flex-wrap: nowrap; justify-content: flex-end; }
 
-.updated-block { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.updated-block { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.updated-line { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .updated-label {
   font-size: 10px;
   font-weight: 600;

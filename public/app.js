@@ -200,10 +200,9 @@ function render() {
         })
       : "–";
   const goStamp = stamp(dashboard.goDocsFetchedAt);
-  const benchStamp = dashboard.aaFetchedAt
-    ? stamp(dashboard.aaFetchedAt) + (dashboard.aaFromCache ? " (cached)" : "")
-    : "–";
-  el("updated").textContent = `Pricing ${goStamp} · Benchmarks ${benchStamp}`;
+  const benchStamp = stamp(dashboard.aaFetchedAt);
+  el("updated-pricing").textContent = `Pricing ${goStamp}`;
+  el("updated-benchmarks").textContent = `Benchmarks ${benchStamp}`;
 
   // Stat cards. Everything on the page is scoped to the plan + privacy filters.
   el("models-label").textContent = `Models in ${PLAN_LABELS[plan] ?? "Go"}`;
