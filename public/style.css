@@ -411,6 +411,16 @@ td .model-id { color: var(--muted); font-size: 12px; }
 .chart-panel .panel-head { align-items: flex-start; flex-wrap: wrap; }
 .chart-panel .panel-head .panel-heading { margin-bottom: 0; }
 .chart-box { position: relative; height: 440px; }
+.chart-quadrant { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.chart-quadrant[hidden] { display: none; }
+.quadrant-swatch {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 2px;
+  background: rgba(44, 147, 2, 0.18);
+  border: 1px solid rgba(44, 147, 2, 0.35);
+}
 .chart-credit { margin-top: 12px; }
 
 .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 12px 0 0; }

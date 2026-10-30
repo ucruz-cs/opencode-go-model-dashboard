@@ -6,7 +6,7 @@ A small, dependency-free dashboard that shows how the models in your **OpenCode 
 
 [![OpenCode Go model dashboard](docs/screenshot.png)](docs/screenshot.png)
 
-> **Illustrative screenshot.** Artificial Analysis benchmark values in the table are blurred, and the chart plots synthetic intelligence scores, not real benchmark results. Pricing, token allowances and retention data are real OpenCode Go data. AA's free API is for internal use only, so no AA benchmark values are reproduced in this image. See [Data sources, attribution & licensing](#data-sources-attribution--licensing).
+> **Illustrative screenshot.** Artificial Analysis benchmark values in the table are blurred, and the chart plots synthetic intelligence scores, not real results. AA's free API is for internal use only, so no AA benchmark values are reproduced in this image. See [Data sources, attribution & licensing](#data-sources-attribution--licensing).
 
 On start it:
 
@@ -116,7 +116,7 @@ Tiered rows (context-size or peak/off-peak) are kept as separate price variants.
 
 ## Matching OpenCode Go models to Artificial Analysis
 
-Names differ between the two catalogues (for example `deepseek-v4.1-flash` vs. the AA slug `deepseek-v4-1-flash`, or AA's `(High)`/`(Max)` effort variants). The matcher normalises both sides and prefers the base (non-variant) entry. If a model is not matched, add it to `overrides.json`:
+Names differ between the two catalogues (for example `qwen3.8-flash` vs. the AA slug `qwen3-8-flash-next`, or AA's `(High)`/`(Max)` effort variants). The matcher normalises both sides and prefers the base (non-variant) entry. If a model is not matched, add it to `overrides.json`:
 
 ```json
 {

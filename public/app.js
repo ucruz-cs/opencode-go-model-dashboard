@@ -453,6 +453,14 @@ function renderCharts(rows) {
     ? niceCeil(Math.max(...finiteTokens, 1) * 1.15)
     : null;
 
+  const intelligenceValues = points
+    .map((m) => m.metrics.intelligence)
+    .filter((v) => v != null);
+  const quadrant =
+    points.length >= 4 && finiteTokens.length > 0
+      ? { x: median(finiteTokens), y: median(intelligenceValues) }
+      : null;
+
   const usageOf = (m) => {
     const pricing = pricingOf(m);
     return isUnlimitedPricing(pricing) ? unlimitedX : pricing.monthlyTokens;
@@ -481,11 +489,14 @@ function renderCharts(rows) {
   if (sub) {
     sub.textContent =
       tierFilter === "both"
-        ? "Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest-priced tier. Up and to the right is better (smarter and more usage)."
+        ? "Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest-priced tier."
         : `Showing the ${
             tierFilter === "expensive" ? "highest-priced" : "lowest-priced"
-          } tier of each model. Up and to the right is better (smarter and more usage).`;
+          } tier of each model.`;
   }
+
+  const quadrantNote = el("chart-quadrant-note");
+  if (quadrantNote) quadrantNote.hidden = !quadrant;
 
   buildScatter("chart-usage", points, {
     xGetter: usageOf,
@@ -497,9 +508,53 @@ function renderCharts(rows) {
       hasUnlimited && value >= unlimitedX * 0.999 ? "∞" : fmtTokensValue(value),
     fmtY: (value) => value,
     connectors,
+    quadrant,
     showTiers: tierFilter === "both",
   });
 }
+
+const QUADRANT_FILL = "rgba(44, 147, 2, 0.07)";
+const QUADRANT_BORDER = "rgba(44, 147, 2, 0.22)";
+
+/**
+ * Shade the "most attractive" corner of the chart: above-median intelligence
+ * and above-median usage. Drawn before the scales/datasets so gridlines and
+ * points sit on top of the fill.
+ */
+const attractiveQuadrantPlugin = {
+  id: "attractiveQuadrant",
+  beforeDraw(chart) {
+    const quadrant = chart.options.plugins.attractiveQuadrant;
+    if (!quadrant || quadrant.x == null || quadrant.y == null) return;
+
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+
+    const xPixel = scales.x.getPixelForValue(quadrant.x);
+    const yPixel = scales.y.getPixelForValue(quadrant.y);
+    if (!Number.isFinite(xPixel) || !Number.isFinite(yPixel)) return;
+
+    const left = Math.max(chartArea.left, Math.min(chartArea.right, xPixel));
+    const bottom = Math.max(chartArea.top, Math.min(chartArea.bottom, yPixel));
+    const width = chartArea.right - left;
+    const height = bottom - chartArea.top;
+    if (width <= 0 || height <= 0) return;
+
+    ctx.save();
+    ctx.fillStyle = QUADRANT_FILL;
+    ctx.fillRect(left, chartArea.top, width, height);
+
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = QUADRANT_BORDER;
+    ctx.lineWidth = 1;
+    ctx.moveTo(left, chartArea.top);
+    ctx.lineTo(left, bottom);
+    ctx.lineTo(chartArea.right, bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
 
 const tierConnectorPlugin = {
   id: "tierConnectors",
@@ -593,7 +648,7 @@ function buildScatter(canvasId, rows, opts = {}) {
   charts[canvasId] = new Chart(el(canvasId), {
     type: "scatter",
     data: { datasets },
-    plugins: [tierConnectorPlugin],
+    plugins: [attractiveQuadrantPlugin, tierConnectorPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -610,6 +665,7 @@ function buildScatter(canvasId, rows, opts = {}) {
           },
         },
         tierConnectors: { groups: opts.connectors ?? [] },
+        attractiveQuadrant: opts.quadrant ?? null,
         tooltip: {
           callbacks: {
             label: (ctx) => {
@@ -658,6 +714,16 @@ function buildScatter(canvasId, rows, opts = {}) {
 
 function round(v) {
   return typeof v === "number" ? Math.round(v * 100) / 100 : v;
+}
+
+/** Median of a numeric array, or null when it is empty. */
+function median(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 /**
