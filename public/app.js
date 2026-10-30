@@ -479,19 +479,12 @@ function renderCharts(rows) {
 
   const sub = el("chart-sub");
   if (sub) {
-    const unlimitedNote = hasUnlimited
-      ? " Unlimited models are pinned at the right edge (∞)."
-      : "";
-    const versionNote = ` Scores are from the Artificial Analysis Intelligence Index v${
-      dashboard.aaIndexVersion ?? "5.0"
-    }.`;
-    const base =
+    sub.textContent =
       tierFilter === "both"
-        ? `Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest-priced tier. Up and to the right is better (smarter and more usage).${unlimitedNote}`
+        ? "Each dot is a price tier — dashed lines connect tiers of the same model; hollow markers are the highest-priced tier. Up and to the right is better (smarter and more usage)."
         : `Showing the ${
             tierFilter === "expensive" ? "highest-priced" : "lowest-priced"
-          } tier of each model. Up and to the right is better (smarter and more usage).${unlimitedNote}`;
-    sub.textContent = base + versionNote;
+          } tier of each model. Up and to the right is better (smarter and more usage).`;
   }
 
   buildScatter("chart-usage", points, {
