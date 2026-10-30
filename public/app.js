@@ -1,7 +1,8 @@
 let dashboard = null;
 let sortKey = "intelligence";
 let sortDir = "desc";
-let plan = "go"; // "go" | "plus"
+let plan = "go"; // "go" | "plus" | "teams"
+const PLAN_LABELS = { go: "Go", plus: "Go Plus", teams: "Go Teams" };
 let privacyFilter = "all"; // "all" | "notraining" | "zdr"
 let tierFilter = "cheap"; // "cheap" | "both" | "expensive"
 let logX = true; // usage (tokens/mo) axis scale
@@ -11,15 +12,15 @@ let currentVariants = [];
 /** Days after which cached benchmark data is flagged as stale in the banner. */
 const STALE_AFTER_DAYS = 7;
 
-/** Pricing for the selected subscription plan (falls back to Go if Plus is missing). */
+/** Pricing for the selected subscription plan (falls back to Go if missing). */
 function activePricing(model) {
   if (model.isVariant) return model.pricing;
-  return plan === "plus" ? (model.pricingPlus ?? model.pricing) : model.pricing;
+  return model.plans?.[plan] ?? model.plans?.go ?? model.pricing ?? null;
 }
 
 /** Pricing for one tier under the selected subscription plan. */
 function planPricing(tier) {
-  return plan === "plus" ? (tier.pricingPlus ?? tier.pricing) : tier.pricing;
+  return tier.plans?.[plan] ?? tier.plans?.go ?? tier.pricing ?? null;
 }
 
 /** Blended price used to order tiers; unpriced tiers sort last. */
@@ -37,7 +38,7 @@ function modelTiers(model) {
       tier: null,
       kind: null,
       pricing: model.pricing,
-      pricingPlus: model.pricingPlus,
+      plans: model.plans ?? { go: model.pricing },
     },
   ];
 }
@@ -79,7 +80,6 @@ function tierVariants(model) {
     tierKind: tier.kind,
     tierIndex: tier.index,
     pricing: tier.active,
-    pricingPlus: undefined,
     isCheapestTier: tierBlend(tier.active) === min,
     isMostExpensiveTier: tierBlend(tier.active) === max,
     multipleTiers: allTiers.length > 1,
@@ -206,8 +206,7 @@ function render() {
   el("updated").textContent = `Pricing ${goStamp} · Benchmarks ${benchStamp}`;
 
   // Stat cards. Everything on the page is scoped to the plan + privacy filters.
-  el("models-label").textContent =
-    plan === "plus" ? "Models in Go Plus" : "Models in Go";
+  el("models-label").textContent = `Models in ${PLAN_LABELS[plan] ?? "Go"}`;
   const indexVersion = dashboard.aaIndexVersion ?? "5.0";
   const models = filteredModels();
   const variants = models.flatMap(tierVariants);

@@ -7,7 +7,7 @@ A small, dependency-free dashboard that shows how the models in your **OpenCode 
 On start it:
 
 1. parses the OpenCode Go model list, token prices and privacy table from the MIT-licensed Markdown source behind the docs (`services/www/src/docs/content/console/go.mdx` in [anomalyco/opencode](https://github.com/anomalyco/opencode));
-2. computes an **effective price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many effective tokens the monthly Go allowance buys (`monthly $ ÷ effective price`);
+2. computes an **effective price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many effective tokens the selected plan's monthly allowance buys (`monthly $ ÷ effective price`);
 3. loads Artificial Analysis benchmark data from its cache, fetching it (paginated) only when no cache exists;
 4. joins the two catalogues by model name and serves the result in a web UI.
 
@@ -67,6 +67,8 @@ The docs page publishes per-model token prices (Input, Output, Cached Read) and 
 
 - **Effective $/1M tok** — `0.045 × input + 0.9485 × cached_read + 0.0065 × output` (the traffic-weighted Go usage mix described below).
 - **Tokens / mo** — `monthly_allowance ÷ effective price` (millions of effective tokens).
+
+Per-token prices are identical across **Go**, **Go Plus** and **Go Teams**; only the monthly allowance differs. Go Teams figures are per member.
 
 ### Where the 4.5 / 94.85 / 0.65 % mix comes from
 
