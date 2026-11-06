@@ -11,5 +11,9 @@
   "beam-free": {
     "slug": "reflection-beam",
     "note": "AA lists Reflection's Beam 1.0; Go serves it free for a limited time"
+  },
+  "hy4": {
+    "slug": "tencent-hy4",
+    "note": "AA lists the stable Tencent Hy4 under a creator-prefixed slug"
   }
 }
