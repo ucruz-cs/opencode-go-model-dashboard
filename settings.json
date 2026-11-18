@@ -1,4 +1,5 @@
 {
+  "GO_MODELS_URL": "https://opencode.ai/inference/go/v1/models",
   "GO_DOCS_URL": "https://raw.githubusercontent.com/anomalyco/opencode/dev/services/site/src/docs/content/console/go.mdx",
   "AA_BASE_URL": "https://artificialanalysis.ai/api/v2"
 }

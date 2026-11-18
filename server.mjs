@@ -2,7 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { loadConfig, ROOT } from "./lib/env.mjs";
-import { fetchGoDocs, readGoCache, writeGoCache } from "./lib/goLimits.mjs";
+import { fetchGoData, readGoCache, writeGoCache } from "./lib/goLimits.mjs";
 import { AA_CACHE_VERSION, fetchAaModels, readAaCache, writeAaCache } from "./lib/aaModels.mjs";
 import { buildDashboard } from "./lib/match.mjs";
 
@@ -33,7 +33,7 @@ const MIME = {
 async function refresh({ force = false } = {}) {
   const warnings = [];
 
-  // OpenCode Go docs: reuse the on-disk cache at startup. Only an explicit
+  // OpenCode Go data: reuse the on-disk cache at startup. Only an explicit
   // refresh (the Refresh button) fetches a new copy; if no cache exists yet,
   // fetch once to populate it.
   let goModels = lastGo.models;
@@ -41,18 +41,21 @@ async function refresh({ force = false } = {}) {
   let goFetchedLive = false;
   if (force || goModels.length === 0) {
     try {
-      const parsed = await fetchGoDocs(cfg.GO_DOCS_URL);
-      if (parsed.error) {
-        warnings.push(`OpenCode Go docs: ${parsed.error}`);
-      } else {
-        const cache = writeGoCache(parsed.models, { source: cfg.GO_DOCS_URL });
-        goModels = parsed.models;
-        goFetchedAt = cache.fetchedAt;
-        goFetchedLive = true;
-        lastGo = { models: goModels, fetchedAt: goFetchedAt };
-      }
+      const parsed = await fetchGoData({
+        modelsUrl: cfg.GO_MODELS_URL,
+        docsUrl: cfg.GO_DOCS_URL,
+      });
+      if (parsed.warning) warnings.push(parsed.warning);
+      const cache = writeGoCache(parsed.models, {
+        source: cfg.GO_MODELS_URL,
+        docs: cfg.GO_DOCS_URL,
+      });
+      goModels = parsed.models;
+      goFetchedAt = cache.fetchedAt;
+      goFetchedLive = true;
+      lastGo = { models: goModels, fetchedAt: goFetchedAt };
     } catch (err) {
-      warnings.push(`Could not load OpenCode Go docs: ${err.message}`);
+      warnings.push(`Could not load OpenCode Go data: ${err.message}`);
     }
   }
 
@@ -183,7 +186,7 @@ server.listen(cfg.PORT, async () => {
       : dash.goDocsFromCache
         ? "from cache"
         : "fetched live";
-    console.log(`  Go docs ${goState}`);
+    console.log(`  Go data ${goState}`);
     const aaState = !dash.aaConfigured
       ? " (AA data not fetched — no API key)"
       : dash.aaFromCache

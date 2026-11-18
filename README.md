@@ -10,12 +10,12 @@ A small, dependency-free dashboard that shows how the models in your **OpenCode 
 
 On start it:
 
-1. parses the OpenCode Go model list, token prices and privacy table from the MIT-licensed Markdown source behind the docs (`services/site/src/docs/content/console/go.mdx` in [anomalyco/opencode](https://github.com/anomalyco/opencode));
+1. parses the live OpenCode Go models endpoint (`https://opencode.ai/inference/go/v1/models`) for the model list, token prices, Go/Plus/Teams allowances and training/ZDR flags, plus the MIT-licensed `go.mdx` source for exact retention days and notes;
 2. computes an **effective price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many effective tokens the selected plan's monthly allowance buys (`monthly $ ÷ effective price`);
 3. loads Artificial Analysis benchmark data from its cache, fetching it (paginated) only when no cache exists;
 4. joins the two catalogues by model name and serves the result in a web UI.
 
-The model list, prices and privacy data come from that Markdown source; benchmarks come from Artificial Analysis. Both payloads are cached locally (`cache/go.json` and `cache/aa.json`) and re-fetched **only** when you press **Refresh**, or on the first run when no cache exists yet.
+The model list, prices and allowances come from the live Go models endpoint; retention comes from `go.mdx`; benchmarks come from Artificial Analysis. All payloads are cached locally (`cache/go.json` and `cache/aa.json`) and re-fetched **only** when you press **Refresh**, or on the first run when no cache exists yet.
 
 Only Artificial Analysis' quality benchmarks are shown: the **Intelligence Index** (v5.0, an equally weighted average of Knowledge Work, Coding, Science and General) and the **Engineering** capability index. Models AA has not scored on the current index version yet show `–` and are left out of the chart. AA's speed/latency measurements are excluded because they are measured on AA's own inference and don't reflect how the models are served through OpenCode Go.
 
@@ -54,10 +54,11 @@ settings live in `settings.json` (committed).
 
 ### `settings.json`
 
-| Key                    | Default                                | Purpose                              |
-| ---------------------- | -------------------------------------- | ------------------------------------ |
-| `GO_DOCS_URL`          | raw `go.mdx` on the `dev` branch¹      | OpenCode Go docs source (Markdown).  |
-| `AA_BASE_URL`          | `https://artificialanalysis.ai/api/v2` | Artificial Analysis API base.        |
+| Key              | Default                                     | Purpose                                       |
+| ---------------- | ------------------------------------------- | --------------------------------------------- |
+| `GO_MODELS_URL`  | `https://opencode.ai/inference/go/v1/models` | Live Go models, prices and plan allowances.  |
+| `GO_DOCS_URL`    | raw `go.mdx` on the `dev` branch¹           | Retention table and notes.                    |
+| `AA_BASE_URL`    | `https://artificialanalysis.ai/api/v2`      | Artificial Analysis API base.                 |
 
 ¹ `https://raw.githubusercontent.com/anomalyco/opencode/dev/services/site/src/docs/content/console/go.mdx` — `dev` is the branch the live docs are built from; the `v2` branch copy lags behind and misses recent models.
 
@@ -131,7 +132,8 @@ Unmatched models appear in the "No benchmark data found" panel.
 
 This is an unofficial project and is not affiliated with Anomaly Innovations, Inc. ("OpenCode") or Artificial Analysis.
 
-- **Model list, prices and privacy** are parsed from the MIT-licensed [`go.mdx`](https://github.com/anomalyco/opencode/blob/dev/services/site/src/docs/content/console/go.mdx) source in the `anomalyco/opencode` repository (`Copyright (c) 2025 opencode`, MIT). The rendered page is <https://opencode.ai/v2/docs/console/go/>. No OpenCode data is committed to this repository; each user's copy is cached locally in `cache/go.json`.
+- **Model list, token prices, plan allowances and training/ZDR flags** are read from the live OpenCode Go models endpoint (`https://opencode.ai/inference/go/v1/models`). The dashboard reads it locally, once per explicit Refresh; the response is cached locally in `cache/go.json` and is not committed or redistributed by this project.
+- **Retention details** are parsed from the MIT-licensed [`go.mdx`](https://github.com/anomalyco/opencode/blob/dev/services/site/src/docs/content/console/go.mdx) source. The rendered page is <https://opencode.ai/v2/docs/console/go/>.
 - **Benchmarks** are provided by [Artificial Analysis](https://artificialanalysis.ai/) and displayed under their free API terms, which require attribution and permit **internal use only — no redistribution**. You must supply your own `AA_API_KEY`. Benchmark data is cached locally in `cache/aa.json` and is not committed to this repository. If you deploy this dashboard publicly, or redistribute the data in any form, you need a license from Artificial Analysis that grants those rights.
-- **Code** in this repository is MIT licensed; see [LICENSE](LICENSE). The licences of the data above are separate and do not extend to it.
+- **Code** in this repository is MIT licensed; see [LICENSE](LICENSE). The licences of the data above are separate and do not extend to it. The live Go models endpoint is a hosted OpenCode service and is used here only for local model discovery; it is not covered by the repository's MIT licence.
  
