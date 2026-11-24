@@ -193,10 +193,19 @@ server.listen(cfg.PORT, async () => {
         ? " (AA data from cache)"
         : " (AA data fetched live)";
     console.log(
-      `  Loaded ${dash.counts.matched}/${dash.counts.go} Go models with benchmark data` +
+      `  Loaded ${dash.counts.matched}/${dash.counts.go} Go chat models with benchmark data` +
         aaState,
     );
     console.log(`  Pricing (effective) available for ${dash.counts.priced} models`);
+    if (dash.counts.skippedNonChat) {
+      const detail = Object.entries(dash.counts.skippedByType ?? {})
+        .map(([type, count]) => `${count} ${type}`)
+        .join(", ");
+      console.log(
+        `  Excluded ${dash.counts.skippedNonChat} non-chat model(s)` +
+          (detail ? ` (${detail})` : ""),
+      );
+    }
     for (const w of dash.warnings) console.warn(`  ! ${w}`);
   } catch (err) {
     console.error(`  ! Startup refresh failed: ${err.message}`);

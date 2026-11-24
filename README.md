@@ -10,12 +10,14 @@ A small, dependency-free dashboard that shows how the models in your **OpenCode 
 
 On start it:
 
-1. parses the live OpenCode Go models endpoint (`https://opencode.ai/inference/go/v1/models`) for the model list, token prices, Go/Plus/Teams allowances and training/ZDR flags, plus the MIT-licensed `go.mdx` source for exact retention days and notes;
+1. parses the live OpenCode Go models endpoint (`https://opencode.ai/inference/go/v1/models`) for the chat model list, token prices, Go/Plus/Teams allowances and training/ZDR flags, plus the MIT-licensed `go.mdx` source for exact retention days and notes;
 2. computes an **effective price** per model using a traffic-weighted Go usage mix (`4.5% input + 94.85% cached input + 0.65% output`, per 1M tokens) and how many effective tokens the selected plan's monthly allowance buys (`monthly $ ÷ effective price`);
 3. loads Artificial Analysis benchmark data from its cache, fetching it (paginated) only when no cache exists;
 4. joins the two catalogues by model name and serves the result in a web UI.
 
 The model list, prices and allowances come from the live Go models endpoint; retention comes from `go.mdx`; benchmarks come from Artificial Analysis. All payloads are cached locally (`cache/go.json` and `cache/aa.json`) and re-fetched **only** when you press **Refresh**, or on the first run when no cache exists yet.
+
+Only Go **chat** models are included. The endpoint also lists decision and embedding models, but Artificial Analysis' language benchmarks do not cover them, so they are excluded from the model list, counts and unmatched panel.
 
 Only Artificial Analysis' quality benchmarks are shown: the **Intelligence Index** (v5.0, an equally weighted average of Knowledge Work, Coding, Science and General) and the **Engineering** capability index. Models AA has not scored on the current index version yet show `–` and are left out of the chart. AA's speed/latency measurements are excluded because they are measured on AA's own inference and don't reflect how the models are served through OpenCode Go.
 

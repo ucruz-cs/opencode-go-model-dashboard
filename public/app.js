@@ -205,7 +205,7 @@ function render() {
   el("updated-benchmarks").textContent = `Benchmarks ${benchStamp}`;
 
   // Stat cards. Everything on the page is scoped to the plan + privacy filters.
-  el("models-label").textContent = `Models in ${PLAN_LABELS[plan] ?? "Go"}`;
+  el("models-label").textContent = `Chat models in ${PLAN_LABELS[plan] ?? "Go"}`;
   const indexVersion = dashboard.aaIndexVersion ?? "5.0";
   const models = filteredModels();
   const variants = models.flatMap(tierVariants);
