@@ -137,6 +137,33 @@ function fmtTokens(pricing) {
   return fmtTokensValue(pricing.monthlyTokens);
 }
 
+/** Only show a promo while its scheduled price change is still ahead. */
+function activePromo(promo) {
+  const startsAt = promo?.startsAt ? Date.parse(promo.startsAt) : NaN;
+  if (!Number.isFinite(startsAt) || startsAt <= Date.now()) return null;
+  return { ...promo, startsAt };
+}
+
+/** Format a promo boundary as a short UTC date. */
+function fmtPromoDate(ms) {
+  return new Date(ms).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** "bonus" badge for a limited-time price discount. */
+function promoBadge(model) {
+  const promo = activePromo(model.promo);
+  if (!promo) return "";
+  const pct = Math.round((1 - 1 / promo.factor) * 100);
+  const endsOn = fmtPromoDate(promo.startsAt - 86_400_000);
+  const title = `${pct}% off until ${endsOn}`;
+  return `<span class="badge warn" title="${escapeHtml(title)}">bonus</span>`;
+}
+
 function el(id) {
   return document.getElementById(id);
 }
@@ -369,13 +396,7 @@ function renderTable(rows = currentVariants) {
                 m.note ?? "manual mapping",
               )}">mapped</span>`
             : ""
-        }${
-          p?.limitedTime
-            ? `<span class="badge warn" title="Limited-time bonus">${
-                p.bonus ? `${p.bonus}× ` : ""
-              }limited</span>`
-            : ""
-        }</div>
+        }${promoBadge(m)}</div>
         <div class="model-id">${escapeHtml(m.id)}</div>
       </td>
       <td><span class="dot" style="background:${colorFor(
