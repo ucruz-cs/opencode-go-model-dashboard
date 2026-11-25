@@ -11,8 +11,8 @@ A small, dependency-free dashboard that shows how the chat models in your **Open
 ## What you get
 
 - **Comparison table** — intelligence, engineering, effective price per 1M tokens, tokens per month, data retention and training flags for every Go chat model, sortable on any column.
-- **Intelligence vs. tokens chart** — what a plan's monthly allowance buys you in practice, with a highlighted "most attractive" quadrant and a log/linear axis switch.
-- **Plan switch** — Go, Go Plus and Go Teams side by side.
+- **Intelligence vs. tokens chart** — what a plan's monthly allowance buys you in practice, with a "most attractive" quadrant, a Pareto line through the models nothing beats on price and score, and a log/linear axis switch.
+- **Plan switch** — Go, Go Plus and Go Teams side by side. Token prices are the same across plans; only the monthly allowance changes.
 - **Filters** — hide models whose prompts may be used for training, keep only zero-retention models, or collapse price tiers to their cheapest or most expensive rate.
 - **Best-model cards** — smartest, best all-rounder (intelligence × tokens) and most tokens per month, for whatever is currently on screen.
 - **JSON API** — the page is rendered from `GET /api/dashboard`, so the same numbers can be scripted against.

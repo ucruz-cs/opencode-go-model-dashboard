@@ -519,7 +519,9 @@ function renderCharts(rows) {
   const quadrantNote = el("chart-quadrant-note");
   if (quadrantNote) quadrantNote.hidden = !quadrant;
 
-  buildScatter("chart-usage", points, {
+  const paretoNote = el("chart-pareto-note");
+
+  const { paretoCount } = buildScatter("chart-usage", points, {
     xGetter: usageOf,
     yGetter: (m) => m.metrics.intelligence,
     xLabel: "Tokens / mo",
@@ -532,10 +534,13 @@ function renderCharts(rows) {
     quadrant,
     showTiers: tierFilter === "both",
   });
+
+  if (paretoNote) paretoNote.hidden = paretoCount < 2;
 }
 
 const QUADRANT_FILL = "rgba(44, 147, 2, 0.07)";
 const QUADRANT_BORDER = "rgba(44, 147, 2, 0.22)";
+const PARETO_COLOR = "#334155";
 
 /**
  * Shade the "most attractive" corner of the chart: above-median intelligence
@@ -572,6 +577,36 @@ const attractiveQuadrantPlugin = {
     ctx.moveTo(left, chartArea.top);
     ctx.lineTo(left, bottom);
     ctx.lineTo(chartArea.right, bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
+/**
+ * Dotted Pareto frontier through the non-dominated models. Drawn after the
+ * quadrant fill (`beforeDraw`) and before the datasets, so the model dots stay
+ * legible on top of the line.
+ */
+const paretoLinePlugin = {
+  id: "paretoLine",
+  beforeDatasetsDraw(chart) {
+    const points = chart.options.plugins.paretoLine?.points ?? [];
+    if (points.length < 2) return;
+
+    const { ctx, scales } = chart;
+    const pts = points.map((p) => ({
+      x: scales.x.getPixelForValue(p.x),
+      y: scales.y.getPixelForValue(p.y),
+    }));
+    if (pts.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.y))) return;
+
+    ctx.save();
+    ctx.strokeStyle = PARETO_COLOR;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([2, 3]);
+
+    ctx.beginPath();
+    pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.stroke();
     ctx.restore();
   },
@@ -665,11 +700,15 @@ function buildScatter(canvasId, rows, opts = {}) {
     };
   });
 
+  // Non-dominated models: drawn by paretoLinePlugin between the quadrant fill
+  // and the model dots, so it needs no dataset (and no legend/tooltip entry).
+  const frontier = paretoFrontier(points);
+
   if (charts[canvasId]) charts[canvasId].destroy();
   charts[canvasId] = new Chart(el(canvasId), {
     type: "scatter",
     data: { datasets },
-    plugins: [attractiveQuadrantPlugin, tierConnectorPlugin],
+    plugins: [attractiveQuadrantPlugin, paretoLinePlugin, tierConnectorPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -687,6 +726,7 @@ function buildScatter(canvasId, rows, opts = {}) {
         },
         tierConnectors: { groups: opts.connectors ?? [] },
         attractiveQuadrant: opts.quadrant ?? null,
+        paretoLine: { points: frontier },
         tooltip: {
           callbacks: {
             label: (ctx) => {
@@ -731,6 +771,8 @@ function buildScatter(canvasId, rows, opts = {}) {
       },
     },
   });
+
+  return { paretoCount: frontier.length };
 }
 
 function round(v) {
@@ -745,6 +787,30 @@ function median(values) {
   return sorted.length % 2
     ? sorted[mid]
     : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+/**
+ * Non-dominated models on (tokens/mo, intelligence): keep a model only when no
+ * other model offers both more tokens (i.e. is cheaper) and a higher score.
+ *
+ * Cheaper means further right, so the frontier is walked from the cheapest
+ * point leftwards, keeping each strictly smarter model. Returned left to right,
+ * intelligence descending.
+ */
+function paretoFrontier(points) {
+  const sorted = points
+    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y))
+    .sort((a, b) => b.x - a.x || b.y - a.y);
+
+  const out = [];
+  let bestY = -Infinity;
+  for (const p of sorted) {
+    if (p.y > bestY) {
+      out.push(p);
+      bestY = p.y;
+    }
+  }
+  return out.reverse();
 }
 
 /**

@@ -61,6 +61,8 @@ Context-size and peak/off-peak rates are separate pricing rows, so a tiered mode
 
 Each point plots AA intelligence against the effective tokens per month for the selected plan. The usage axis can be switched between **Log** (default) and **Linear**. Free models with unlimited usage have no position on that axis, so they are pinned just beyond the largest finite value and labelled `∞` instead of being dropped. When the filters leave enough models with both metrics, a shaded quadrant marks the set with above-median intelligence and above-median usage.
 
+The dotted **Pareto line** joins the models that are not dominated on this chart: a model stays on the line only if no other model is both cheaper (more tokens for the same allowance) and more intelligent. Because the usage axis points towards cheaper models, the line descends from left to right. It is recomputed from the rows currently shown, so it changes with the plan, privacy and price-tier filters. Unlimited-usage models sit at the far right, where only the smartest of them can be on the line.
+
 Creator colours are deterministic — the same model keeps its colour no matter which filters are active.
 
 ## Refresh
